@@ -1,3 +1,14 @@
+/**
+ * @description A React component that guards routes and only renders children when the user is authenticated.
+ * 
+ * @usage This component is used in React Router configuration to wrap protected pages like the dashboard, redirecting unauthenticated users to the login page.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <PrivateRoute><Dashboard /></PrivateRoute>
+ */
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { jwtDecode } from 'jwt-decode';

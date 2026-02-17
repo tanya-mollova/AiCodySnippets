@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders the animated welcome/landing page with hero content and recent public snippets.
+ * 
+ * @usage This component is used on the root route (/) to introduce AiCodySnippets, provide entry points to register or log in, and showcase up to eight recent public snippets.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <Welcome />
+ */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';

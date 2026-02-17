@@ -1,3 +1,14 @@
+/**
+ * @description A React component that defines the root application shell and client-side routing.
+ * 
+ * @usage This component is used as the entry point for React Router, wiring up public routes (welcome, login, register) and protected routes (dashboard).
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <App />
+ */
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';

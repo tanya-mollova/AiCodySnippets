@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders the login form for existing users.
+ * 
+ * @usage This component is used on the /login route to authenticate users and start a session for accessing protected areas like the dashboard.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <Login />
+ */
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';

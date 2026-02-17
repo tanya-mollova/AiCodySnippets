@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders the registration form for new users.
+ * 
+ * @usage This component is used on the /register route to collect user details and create an account before logging into the dashboard.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <Register />
+ */
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';

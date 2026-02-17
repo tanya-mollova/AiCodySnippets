@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders a glowing cursor-following effect over the UI.
+ * 
+ * @usage This component is used on the welcome page to enhance the dark background with an animated radial glow that follows mouse movement.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <CursorGlow />
+ */
 import { useEffect, useState } from 'react';
 import { Box } from '@mui/material';
 

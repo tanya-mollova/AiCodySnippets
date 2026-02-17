@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders the main snippets dashboard with personal and public snippet management.
+ * 
+ * @usage This component is used as the authenticated home page, allowing users to create, edit, filter, view and delete their own snippets and browse public snippets.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <Dashboard />
+ */
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {

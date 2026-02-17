@@ -1,3 +1,14 @@
+/**
+ * @description A React component that displays syntax-highlighted, scrollable code snippets.
+ * 
+ * @usage This component is used wherever snippet code needs to be rendered with styling, truncation and optional max height in the dashboard and welcome page.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <CodeBlock code={snippet.code} language={snippet.language} maxHeight={200} />
+ */
 import { useEffect, useRef } from 'react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-okaidia.css';

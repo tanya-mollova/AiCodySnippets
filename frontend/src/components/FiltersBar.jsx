@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders a filter and sort toolbar for snippet lists.
+ * 
+ * @usage This component is used above snippet grids to control language, search query, and sort order, and to expose extra right-side actions like "Add Snippet".
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <FiltersBar values={filters} onChange={setFilters} onApply={applyFilters} onReset={resetFilters} />
+ */
 import { Box, TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 
 function FiltersBar({ values, onChange, onApply, onReset, rightActions }) {

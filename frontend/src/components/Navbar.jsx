@@ -1,3 +1,14 @@
+/**
+ * @description A React component that renders the main application navigation bar with branding and user actions.
+ * 
+ * @usage This component is used at the top of the application layout to display the {AiCodySnippets} logo, show the logged in user, and provide logout navigation.
+ * 
+ * @param {Object} props - The component props
+ * @returns {JSX.Element} The rendered component
+ * 
+ * @example
+ * <Navbar />
+ */
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
