@@ -22,15 +22,20 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { Navbar } from '../components';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Navbar, FiltersBar, CodeBlock } from '../components';
 import {
-  fetchSnippets,
+  fetchMySnippets,
+  fetchPublicSnippets,
   createSnippet,
   updateSnippet,
   deleteSnippet,
@@ -38,13 +43,17 @@ import {
 
 function Dashboard() {
   const dispatch = useDispatch();
-  const { snippets, isLoading, isError, message } = useSelector(
+  const { myItems, publicItems, loadingMy, loadingPublic, errorMy, errorPublic, error, loading } = useSelector(
     (state) => state.snippets
   );
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentSnippet, setCurrentSnippet] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewSnippet, setPreviewSnippet] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -54,9 +63,55 @@ function Dashboard() {
     isPublic: false,
   });
 
+  const handleOpenPreview = (snippet) => {
+    setPreviewSnippet(snippet);
+    setPreviewOpen(true);
+  };
+
+  const handleClosePreview = () => {
+    setPreviewOpen(false);
+    setPreviewSnippet(null);
+  };
+
+  const handleCopyCode = async () => {
+    if (!previewSnippet) return;
+    try {
+      await navigator.clipboard.writeText(previewSnippet.code);
+      setCopied(true);
+    } catch (e) {
+      setCopied(true); // still show feedback
+    }
+  };
+
+  const [myFilters, setMyFilters] = useState({ language: '', search: '', sort: '-createdAt' });
+  const [publicFilters, setPublicFilters] = useState({ language: '', search: '', sort: '-createdAt' });
+
   useEffect(() => {
-    dispatch(fetchSnippets());
+    dispatch(fetchMySnippets(myFilters));
+    dispatch(fetchPublicSnippets(publicFilters));
   }, [dispatch]);
+
+  const applyMyFilters = (values) => {
+    setMyFilters(values);
+    dispatch(fetchMySnippets(values));
+  };
+
+  const resetMyFilters = () => {
+    const defaults = { language: '', search: '', sort: '-createdAt' };
+    setMyFilters(defaults);
+    dispatch(fetchMySnippets(defaults));
+  };
+
+  const applyPublicFilters = (values) => {
+    setPublicFilters(values);
+    dispatch(fetchPublicSnippets(values));
+  };
+
+  const resetPublicFilters = () => {
+    const defaults = { language: '', search: '', sort: '-createdAt' };
+    setPublicFilters(defaults);
+    dispatch(fetchPublicSnippets(defaults));
+  };
 
   const handleOpenDialog = (snippet = null) => {
     if (snippet) {
@@ -99,7 +154,7 @@ function Dashboard() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const snippetData = {
@@ -110,13 +165,24 @@ function Dashboard() {
         .filter((tag) => tag),
     };
 
-    if (editMode && currentSnippet) {
-      dispatch(updateSnippet({ id: currentSnippet._id, snippetData }));
-    } else {
-      dispatch(createSnippet(snippetData));
+    try {
+      if (editMode && currentSnippet) {
+        await dispatch(updateSnippet({ id: currentSnippet._id, snippetData })).unwrap();
+        setSnackbar({ open: true, message: 'Snippet updated successfully!', severity: 'success' });
+        await dispatch(fetchMySnippets(myFilters));
+      } else {
+        const created = await dispatch(createSnippet(snippetData)).unwrap();
+        setSnackbar({ open: true, message: 'Snippet created successfully!', severity: 'success' });
+        // Keep lists in sync with server-side filters and ordering
+        await dispatch(fetchMySnippets(myFilters));
+        if (created?.isPublic) {
+          await dispatch(fetchPublicSnippets(publicFilters));
+        }
+      }
+      handleCloseDialog();
+    } catch (err) {
+      setSnackbar({ open: true, message: err || 'Failed to save snippet. Please check all required fields.', severity: 'error' });
     }
-
-    handleCloseDialog();
   };
 
   const handleDelete = (id) => {
@@ -137,7 +203,7 @@ function Dashboard() {
   return (
     <>
       <Navbar />
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
           <Typography variant="h4" component="h1">
             My Snippets
@@ -151,23 +217,38 @@ function Dashboard() {
           </Button>
         </Box>
 
-        {isError && (
+        {(errorMy || errorPublic) && (
           <Typography color="error" sx={{ mb: 2 }}>
-            {message}
+            {errorMy || errorPublic}
           </Typography>
         )}
 
-        {isLoading ? (
-          <Typography>Loading snippets...</Typography>
-        ) : snippets.length === 0 ? (
-          <Box sx={{ textAlign: 'center', mt: 5 }}>
-            <Typography variant="h6" color="text.secondary">
-              No snippets yet. Create your first one!
+        {/* My Snippets Section */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" sx={{ mb: 1 }}>My Snippets</Typography>
+          <FiltersBar
+            values={myFilters}
+            onChange={setMyFilters}
+            onApply={applyMyFilters}
+            onReset={resetMyFilters}
+            rightActions={(
+              <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
+                Add Snippet
+              </Button>
+            )}
+          />
+        </Box>
+        {loadingMy ? (
+          <Typography>Loading your snippets...</Typography>
+        ) : myItems.length === 0 ? (
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Typography variant="body1" color="text.secondary">
+              No personal snippets yet. Use "Add Snippet" to create one.
             </Typography>
           </Box>
         ) : (
           <Grid container spacing={3}>
-            {snippets.map((snippet) => (
+            {myItems.map((snippet) => (
               <Grid item xs={12} md={6} lg={4} key={snippet._id}>
                 <Card>
                   <CardContent>
@@ -195,26 +276,17 @@ function Dashboard() {
                     {snippet.description && (
                       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         {snippet.description}
+                    <IconButton
+                      size="small"
+                      color="default"
+                      onClick={() => handleOpenPreview(snippet)}
+                      title="View full code"
+                    >
+                      <OpenInFullIcon />
+                    </IconButton>
                       </Typography>
                     )}
-                    <Box
-                      sx={{
-                        backgroundColor: '#f5f5f5',
-                        p: 1,
-                        borderRadius: 1,
-                        maxHeight: 100,
-                        overflow: 'auto',
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        component="pre"
-                        sx={{ fontSize: '0.75rem', margin: 0 }}
-                      >
-                        {snippet.code.substring(0, 150)}
-                        {snippet.code.length > 150 ? '...' : ''}
-                      </Typography>
-                    </Box>
+                    <CodeBlock code={snippet.code.substring(0, 600)} language={snippet.language} maxHeight={180} />
                     {snippet.tags && snippet.tags.length > 0 && (
                       <Box sx={{ mt: 1 }}>
                         {snippet.tags.map((tag, index) => (
@@ -239,12 +311,68 @@ function Dashboard() {
                     </IconButton>
                     <IconButton
                       size="small"
-                      color="error"
+                      color="action"
                       onClick={() => handleDelete(snippet._id)}
+                      sx={{
+                        '&:hover': {
+                          color: 'error.main',
+                        },
+                      }}
                     >
                       <DeleteIcon />
                     </IconButton>
                   </CardActions>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
+
+        {/* Public Snippets Section */}
+        <Box sx={{ mt: 6 }}>
+          <Typography variant="h5" sx={{ mb: 1 }}>Public Snippets</Typography>
+          <FiltersBar
+            values={publicFilters}
+            onChange={setPublicFilters}
+            onApply={applyPublicFilters}
+            onReset={resetPublicFilters}
+          />
+        </Box>
+        {loadingPublic ? (
+          <Typography>Loading public snippets...</Typography>
+        ) : publicItems.length === 0 ? (
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Typography variant="body1" color="text.secondary">
+              No public snippets available.
+            </Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {publicItems.map((snippet) => (
+              <Grid item xs={12} md={6} lg={4} key={snippet._id}>
+                <Card>
+                  <CardContent>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="h6" component="div">
+                        {snippet.title}
+                      </Typography>
+                      <Chip label="Public" size="small" color="primary" />
+                    </Box>
+                    <Chip label={snippet.language} size="small" sx={{ mb: 1 }} />
+                    {snippet.description && (
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {snippet.description}
+                      </Typography>
+                    )}
+                    <CodeBlock code={snippet.code.substring(0, 600)} language={snippet.language} maxHeight={180} />
+                    {snippet.tags && snippet.tags.length > 0 && (
+                      <Box sx={{ mt: 1 }}>
+                        {snippet.tags.map((tag, index) => (
+                          <Chip key={index} label={tag} size="small" variant="outlined" sx={{ mr: 0.5, mt: 0.5 }} />
+                        ))}
+                      </Box>
+                    )}
+                  </CardContent>
                 </Card>
               </Grid>
             ))}
@@ -276,12 +404,12 @@ function Dashboard() {
                 sx={{ mb: 2 }}
               />
               <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Language</InputLabel>
+                <InputLabel>Programming Language</InputLabel>
                 <Select
                   name="language"
                   value={formData.language}
                   onChange={handleChange}
-                  label="Language"
+                  label="Programming Language"
                 >
                   <MenuItem value="javascript">JavaScript</MenuItem>
                   <MenuItem value="python">Python</MenuItem>
@@ -291,6 +419,13 @@ function Dashboard() {
                   <MenuItem value="html">HTML</MenuItem>
                   <MenuItem value="css">CSS</MenuItem>
                   <MenuItem value="sql">SQL</MenuItem>
+                  <MenuItem value="typescript">TypeScript</MenuItem>
+                  <MenuItem value="go">Go</MenuItem>
+                  <MenuItem value="rust">Rust</MenuItem>
+                  <MenuItem value="php">PHP</MenuItem>
+                  <MenuItem value="ruby">Ruby</MenuItem>
+                  <MenuItem value="swift">Swift</MenuItem>
+                  <MenuItem value="kotlin">Kotlin</MenuItem>
                   <MenuItem value="other">Other</MenuItem>
                 </Select>
               </FormControl>
@@ -334,6 +469,22 @@ function Dashboard() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Success/Error Snackbar */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </>
   );

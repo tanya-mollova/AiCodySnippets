@@ -46,7 +46,15 @@ const snippetSchema = new mongoose.Schema(
 // Index for searching and filtering
 snippetSchema.index({ language: 1, isPublic: 1, user: 1 });
 snippetSchema.index({ tags: 1 });
-snippetSchema.index({ title: 'text', description: 'text' });
+snippetSchema.index(
+  { title: 'text', description: 'text' },
+  {
+    // Do not treat the `language` field as a MongoDB text language override.
+    // This avoids errors like "language override unsupported: javascript".
+    default_language: 'none',
+    language_override: '__ignored_text_language',
+  }
+);
 
 const Snippet = mongoose.model('Snippet', snippetSchema);
 

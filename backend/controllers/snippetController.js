@@ -136,3 +136,51 @@ export const deleteSnippet = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get current user's snippets (private or public)
+// @route   GET /api/snippets/my
+// @access  Private
+export const getMySnippets = async (req, res) => {
+  try {
+    const { language, search, sort = '-createdAt' } = req.query;
+
+    const filter = { user: req.user._id };
+
+    if (language) {
+      filter.language = language.toLowerCase();
+    }
+
+    if (search) {
+      filter.$text = { $search: search };
+    }
+
+    const snippets = await Snippet.find(filter).sort(sort).populate('user', 'username email');
+    res.status(200).json(snippets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get all public snippets
+// @route   GET /api/snippets/public
+// @access  Public
+export const getPublicSnippets = async (req, res) => {
+  try {
+    const { language, search, sort = '-createdAt' } = req.query;
+
+    const filter = { isPublic: true };
+
+    if (language) {
+      filter.language = language.toLowerCase();
+    }
+
+    if (search) {
+      filter.$text = { $search: search };
+    }
+
+    const snippets = await Snippet.find(filter).sort(sort).populate('user', 'username email');
+    res.status(200).json(snippets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

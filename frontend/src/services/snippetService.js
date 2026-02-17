@@ -12,6 +12,26 @@ export const getSnippets = async (filters = {}) => {
   return response.data;
 };
 
+// Get current user's snippets
+export const getMySnippets = async (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.language) params.append('language', filters.language);
+  if (filters.search) params.append('search', filters.search);
+  if (filters.sort) params.append('sort', filters.sort);
+  const response = await api.get(`/snippets/my?${params.toString()}`);
+  return response.data;
+};
+
+// Get all public snippets
+export const getPublicSnippets = async (filters = {}) => {
+  const params = new URLSearchParams();
+  if (filters.language) params.append('language', filters.language);
+  if (filters.search) params.append('search', filters.search);
+  if (filters.sort) params.append('sort', filters.sort);
+  const response = await api.get(`/snippets/public?${params.toString()}`);
+  return response.data;
+};
+
 // Get a single snippet by ID
 export const getSnippetById = async (id) => {
   const response = await api.get(`/snippets/${id}`);
@@ -20,6 +40,8 @@ export const getSnippetById = async (id) => {
 
 // Create a new snippet
 export const createSnippet = async (snippetData) => {
+  console.log('Creating snippet with data:', snippetData);
+  console.log('Auth token:', localStorage.getItem('token'));
   const response = await api.post('/snippets', snippetData);
   return response.data;
 };
