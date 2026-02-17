@@ -1,2 +1,3 @@
-// Placeholder for reusable components
-// Add shared components here as you develop features
+export { default as Navbar } from './Navbar';
+export { default as PrivateRoute } from './PrivateRoute';
+

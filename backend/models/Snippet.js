@@ -30,7 +30,12 @@ const snippetSchema = new mongoose.Schema(
     },
     isPublic: {
       type: Boolean,
-      default: true,
+      default: false,
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, 'User is required'],
     },
   },
   {
@@ -39,7 +44,7 @@ const snippetSchema = new mongoose.Schema(
 );
 
 // Index for searching and filtering
-snippetSchema.index({ language: 1, isPublic: 1 });
+snippetSchema.index({ language: 1, isPublic: 1, user: 1 });
 snippetSchema.index({ tags: 1 });
 snippetSchema.index({ title: 'text', description: 'text' });
 

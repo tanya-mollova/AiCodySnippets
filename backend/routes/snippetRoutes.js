@@ -6,10 +6,11 @@ import {
   updateSnippet,
   deleteSnippet,
 } from '../controllers/snippetController.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.route('/').get(getSnippets).post(createSnippet);
-router.route('/:id').get(getSnippetById).put(updateSnippet).delete(deleteSnippet);
+router.route('/').get(getSnippets).post(protect, createSnippet);
+router.route('/:id').get(getSnippetById).put(protect, updateSnippet).delete(protect, deleteSnippet);
 
 export default router;
