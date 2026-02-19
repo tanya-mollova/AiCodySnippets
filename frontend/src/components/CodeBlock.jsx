@@ -61,7 +61,7 @@ const langClass = (language) => {
   }
 };
 
-function CodeBlock({ code, language, maxHeight = 200 }) {
+function CodeBlock({ code, language, maxHeight = 200, overflow = 'auto' }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ function CodeBlock({ code, language, maxHeight = 200 }) {
       style={{
         backgroundColor: '#1e1e1e',
         borderRadius: 8,
-        overflow: 'auto',
+        overflow,
         maxHeight,
       }}
     >

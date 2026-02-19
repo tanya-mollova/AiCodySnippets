@@ -12,8 +12,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { Container, Typography, Box, Button, Grid, Card, CardContent, Chip, Fade, Grow } from '@mui/material';
-import { Code as CodeIcon, TrendingUp, Share, Lock } from '@mui/icons-material';
+import { Container, Typography, Box, Button, Grid, Card, CardContent, Chip, Fade, Grow, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Tooltip } from '@mui/material';
+import { Code as CodeIcon, TrendingUp, Share, Lock, ContentCopy as ContentCopyIcon, Close as CloseIcon, NavigateBefore as NavigateBeforeIcon, NavigateNext as NavigateNextIcon } from '@mui/icons-material';
 import { CodeBlock, CursorGlow } from '../components';
 import axios from 'axios';
 
@@ -22,6 +22,52 @@ function Welcome() {
   const [recentSnippets, setRecentSnippets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewSnippet, setViewSnippet] = useState(null);
+  const [viewIndex, setViewIndex] = useState(0);
+  const [copied, setCopied] = useState(false);
+
+  const handleOpenView = (snippet, index) => {
+    setViewSnippet(snippet);
+    setViewIndex(index);
+    setViewOpen(true);
+    setCopied(false);
+  };
+
+  const handleCloseView = () => {
+    setViewOpen(false);
+    setViewSnippet(null);
+  };
+
+  const handleNextSnippet = () => {
+    const next = viewIndex + 1;
+    if (next < recentSnippets.length) {
+      setViewIndex(next);
+      setViewSnippet(recentSnippets[next]);
+      setCopied(false);
+    }
+  };
+
+  const handlePrevSnippet = () => {
+    const prev = viewIndex - 1;
+    if (prev >= 0) {
+      setViewIndex(prev);
+      setViewSnippet(recentSnippets[prev]);
+      setCopied(false);
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (!viewSnippet) return;
+    try {
+      await navigator.clipboard.writeText(viewSnippet.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (e) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -342,10 +388,14 @@ function Welcome() {
                       timeout={2000 + (index * 150)}
                       style={{ transformOrigin: '0 0 0' }}
                     >
-                      <Grid item xs={12} sm={6} md={4} lg={3}>
+                      <Grid item xs={12} sm={6} md={4} lg={3} sx={{ display: 'flex' }}>
                         <Card 
+                          onClick={() => handleOpenView(snippet, index)}
                           sx={{
-                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            width: '100%',
+                            cursor: 'pointer',
                             background: 'linear-gradient(135deg, rgba(42, 42, 42, 0.8) 0%, rgba(33, 33, 33, 0.9) 100%)',
                             backdropFilter: 'blur(10px)',
                             border: '1px solid rgba(233, 165, 48, 0.1)',
@@ -373,45 +423,35 @@ function Welcome() {
                             },
                           }}
                         >
-                          <CardContent>
+                          <CardContent sx={{ flex: 1 }}>
                             <Typography 
                               variant="h6" 
                               component="div" 
-                              sx={{ 
-                                mb: 1,
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
-                              }}
+                              noWrap
+                              sx={{ mb: 1 }}
                             >
                               {snippet.title}
                             </Typography>
                             <Chip
                               label={snippet.language}
                               size="small"
-                              sx={{ mb: 1 }}
-                              color="primary"
+                              sx={{ mb: 1, backgroundColor: '#FFB300', color: '#1a1a1a', fontWeight: 600 }}
                             />
                             {snippet.description && (
                               <Typography 
                                 variant="body2" 
-                                color="text.secondary" 
-                                sx={{ 
-                                  mb: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  display: '-webkit-box',
-                                  WebkitLineClamp: 2,
-                                  WebkitBoxOrient: 'vertical',
-                                }}
+                                color="text.secondary"
+                                noWrap
+                                sx={{ mb: 1 }}
                               >
                                 {snippet.description}
                               </Typography>
                             )}
                             <CodeBlock 
-                              code={snippet.code.substring(0, 200)} 
+                              code={snippet.code} 
                               language={snippet.language} 
-                              maxHeight={120}
+                              maxHeight={96}
+                              overflow="hidden"
                             />
                             {snippet.tags && snippet.tags.length > 0 && (
                               <Box sx={{ mt: 1 }}>
@@ -420,8 +460,7 @@ function Welcome() {
                                     key={tagIndex}
                                     label={tag}
                                     size="small"
-                                    variant="outlined"
-                                    sx={{ mr: 0.5, mt: 0.5 }}
+                                    sx={{ mr: 0.5, mt: 0.5, backgroundColor: 'rgba(255,179,0,0.12)', color: '#FFB300', border: '1px solid rgba(255,179,0,0.35)' }}
                                   />
                                 ))}
                               </Box>
@@ -435,6 +474,79 @@ function Welcome() {
               </Box>
             </Fade>
           )}
+          {/* Snippet View Dialog */}
+          <Dialog open={viewOpen} onClose={handleCloseView} maxWidth="md" fullWidth keepMounted={false}>
+            <DialogTitle sx={{ pb: 1 }}>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
+                    {viewSnippet?.title}
+                  </Typography>
+                  {viewSnippet?.description && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                      {viewSnippet.description}
+                    </Typography>
+                  )}
+                </Box>
+                <IconButton size="small" onClick={handleCloseView} sx={{ mt: 0.25, flexShrink: 0 }}>
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent sx={{ pt: 1 }}>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                <Chip
+                  label={viewSnippet?.language}
+                  size="small"
+                  sx={{ backgroundColor: '#FFB300', color: '#1a1a1a', fontWeight: 600 }}
+                />
+                {viewSnippet?.tags?.map((tag, i) => (
+                  <Chip
+                    key={i}
+                    label={tag}
+                    size="small"
+                    sx={{ backgroundColor: 'rgba(255,179,0,0.12)', color: '#FFB300', border: '1px solid rgba(255,179,0,0.35)' }}
+                  />
+                ))}
+              </Box>
+              <CodeBlock code={viewSnippet?.code || ''} language={viewSnippet?.language} maxHeight={480} />
+            </DialogContent>
+            <DialogActions sx={{ justifyContent: 'space-between', px: 2, py: 1.5 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Tooltip title="Previous snippet">
+                  <span>
+                    <IconButton size="small" onClick={handlePrevSnippet} disabled={viewIndex === 0}>
+                      <NavigateBeforeIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 48, textAlign: 'center' }}>
+                  {viewIndex + 1} / {recentSnippets.length}
+                </Typography>
+                <Tooltip title="Next snippet">
+                  <span>
+                    <IconButton size="small" onClick={handleNextSnippet} disabled={viewIndex === recentSnippets.length - 1}>
+                      <NavigateNextIcon />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  startIcon={<ContentCopyIcon />}
+                  size="small"
+                  onClick={handleCopyCode}
+                  variant="outlined"
+                  color={copied ? 'success' : 'primary'}
+                >
+                  {copied ? 'Copied!' : 'Copy Code'}
+                </Button>
+                <Button onClick={handleCloseView} variant="contained">
+                  Close
+                </Button>
+              </Box>
+            </DialogActions>
+          </Dialog>
         </Container>
       </Box>
     </>

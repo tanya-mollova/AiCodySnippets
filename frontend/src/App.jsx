@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import './App.css';
-import { Login, Register, Dashboard, Welcome } from './pages';
+import { Login, Register, Dashboard, Welcome, MySnippets, PublicSnippets } from './pages';
 import { PrivateRoute } from './components';
 import { checkTokenExpiration } from './store/slices/authSlice';
 
@@ -39,9 +39,21 @@ function App() {
         {/* Protected Routes */}
         <Route
           path="/dashboard"
+          element={<Navigate to="/my-snippets" replace />}
+        />
+        <Route
+          path="/my-snippets"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <MySnippets />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/explore"
+          element={
+            <PrivateRoute>
+              <PublicSnippets />
             </PrivateRoute>
           }
         />

@@ -35,14 +35,17 @@ import {
   InputLabel,
   Snackbar,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CloseIcon from '@mui/icons-material/Close';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Navbar, FiltersBar, CodeBlock } from '../components';
 import {
   fetchMySnippets,
@@ -61,8 +64,10 @@ function Dashboard() {
   const [openDialog, setOpenDialog] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentSnippet, setCurrentSnippet] = useState(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewSnippet, setPreviewSnippet] = useState(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewSnippet, setViewSnippet] = useState(null);
+  const [viewIndex, setViewIndex] = useState(0);
+  const [viewList, setViewList] = useState([]);
   const [copied, setCopied] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [formData, setFormData] = useState({
@@ -74,23 +79,46 @@ function Dashboard() {
     isPublic: false,
   });
 
-  const handleOpenPreview = (snippet) => {
-    setPreviewSnippet(snippet);
-    setPreviewOpen(true);
+  const handleOpenView = (snippet, list, index) => {
+    setViewSnippet(snippet);
+    setViewList(list);
+    setViewIndex(index);
+    setViewOpen(true);
+    setCopied(false);
   };
 
-  const handleClosePreview = () => {
-    setPreviewOpen(false);
-    setPreviewSnippet(null);
+  const handleCloseView = () => {
+    setViewOpen(false);
+    setViewSnippet(null);
+  };
+
+  const handleNextSnippet = () => {
+    const nextIndex = viewIndex + 1;
+    if (nextIndex < viewList.length) {
+      setViewIndex(nextIndex);
+      setViewSnippet(viewList[nextIndex]);
+      setCopied(false);
+    }
+  };
+
+  const handlePrevSnippet = () => {
+    const prevIndex = viewIndex - 1;
+    if (prevIndex >= 0) {
+      setViewIndex(prevIndex);
+      setViewSnippet(viewList[prevIndex]);
+      setCopied(false);
+    }
   };
 
   const handleCopyCode = async () => {
-    if (!previewSnippet) return;
+    if (!viewSnippet) return;
     try {
-      await navigator.clipboard.writeText(previewSnippet.code);
+      await navigator.clipboard.writeText(viewSnippet.code);
       setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (e) {
-      setCopied(true); // still show feedback
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -259,79 +287,77 @@ function Dashboard() {
           </Box>
         ) : (
           <Grid container spacing={3}>
-            {myItems.map((snippet) => (
+            {myItems.map((snippet, index) => (
               <Grid item xs={12} md={6} lg={4} key={snippet._id}>
-                <Card>
+                <Card
+                  sx={{
+                    cursor: 'pointer',
+                    transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
+                  }}
+                  onClick={() => handleOpenView(snippet, myItems, index)}
+                >
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="h6" component="div">
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h6" component="div" noWrap sx={{ flex: 1, mr: 1 }}>
                         {snippet.title}
                       </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleToggleVisibility(snippet)}
-                        title={snippet.isPublic ? 'Make Private' : 'Make Public'}
-                      >
-                        {snippet.isPublic ? (
-                          <VisibilityIcon color="primary" />
-                        ) : (
-                          <VisibilityOffIcon color="action" />
-                        )}
-                      </IconButton>
+                      <Tooltip title={snippet.isPublic ? 'Make Private' : 'Make Public'}>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => { e.stopPropagation(); handleToggleVisibility(snippet); }}
+                        >
+                          {snippet.isPublic ? (
+                            <VisibilityIcon color="primary" />
+                          ) : (
+                            <VisibilityOffIcon color="action" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
                     </Box>
                     <Chip
                       label={snippet.language}
                       size="small"
-                      sx={{ mb: 1 }}
+                      sx={{ mb: 1, backgroundColor: '#FFB300', color: '#1a1a1a', fontWeight: 600 }}
                     />
                     {snippet.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} noWrap>
                         {snippet.description}
-                    <IconButton
-                      size="small"
-                      color="default"
-                      onClick={() => handleOpenPreview(snippet)}
-                      title="View full code"
-                    >
-                      <OpenInFullIcon />
-                    </IconButton>
                       </Typography>
                     )}
-                    <CodeBlock code={snippet.code.substring(0, 600)} language={snippet.language} maxHeight={180} />
+                    <CodeBlock code={snippet.code} language={snippet.language} maxHeight={96} overflow="hidden" />
                     {snippet.tags && snippet.tags.length > 0 && (
                       <Box sx={{ mt: 1 }}>
-                        {snippet.tags.map((tag, index) => (
+                        {snippet.tags.map((tag, i) => (
                           <Chip
-                            key={index}
+                            key={i}
                             label={tag}
                             size="small"
-                            variant="outlined"
-                            sx={{ mr: 0.5, mt: 0.5 }}
+                            sx={{ mr: 0.5, mt: 0.5, backgroundColor: 'rgba(255,179,0,0.12)', color: '#FFB300', border: '1px solid rgba(255,179,0,0.35)' }}
                           />
                         ))}
                       </Box>
                     )}
                   </CardContent>
-                  <CardActions>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleOpenDialog(snippet)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="action"
-                      onClick={() => handleDelete(snippet._id)}
-                      sx={{
-                        '&:hover': {
-                          color: 'error.main',
-                        },
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
+                  <CardActions sx={{ justifyContent: 'flex-end' }}>
+                    <Tooltip title="Edit">
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={(e) => { e.stopPropagation(); handleOpenDialog(snippet); }}
+                      >
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton
+                        size="small"
+                        onClick={(e) => { e.stopPropagation(); handleDelete(snippet._id); }}
+                        sx={{ '&:hover': { color: 'error.main' } }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
                   </CardActions>
                 </Card>
               </Grid>
@@ -359,27 +385,43 @@ function Dashboard() {
           </Box>
         ) : (
           <Grid container spacing={3}>
-            {publicItems.map((snippet) => (
+            {publicItems.map((snippet, index) => (
               <Grid item xs={12} md={6} lg={4} key={snippet._id}>
-                <Card>
+                <Card
+                  sx={{
+                    cursor: 'pointer',
+                    transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                    '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
+                  }}
+                  onClick={() => handleOpenView(snippet, publicItems, index)}
+                >
                   <CardContent>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="h6" component="div">
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="h6" component="div" noWrap sx={{ flex: 1, mr: 1 }}>
                         {snippet.title}
                       </Typography>
                       <Chip label="Public" size="small" color="primary" />
                     </Box>
-                    <Chip label={snippet.language} size="small" sx={{ mb: 1 }} />
+                    <Chip
+                      label={snippet.language}
+                      size="small"
+                      sx={{ mb: 1, backgroundColor: '#FFB300', color: '#1a1a1a', fontWeight: 600 }}
+                    />
                     {snippet.description && (
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }} noWrap>
                         {snippet.description}
                       </Typography>
                     )}
-                    <CodeBlock code={snippet.code.substring(0, 600)} language={snippet.language} maxHeight={180} />
+                    <CodeBlock code={snippet.code} language={snippet.language} maxHeight={96} overflow="hidden" />
                     {snippet.tags && snippet.tags.length > 0 && (
                       <Box sx={{ mt: 1 }}>
-                        {snippet.tags.map((tag, index) => (
-                          <Chip key={index} label={tag} size="small" variant="outlined" sx={{ mr: 0.5, mt: 0.5 }} />
+                        {snippet.tags.map((tag, i) => (
+                          <Chip
+                            key={i}
+                            label={tag}
+                            size="small"
+                            sx={{ mr: 0.5, mt: 0.5, backgroundColor: 'rgba(255,179,0,0.12)', color: '#FFB300', border: '1px solid rgba(255,179,0,0.35)' }}
+                          />
                         ))}
                       </Box>
                     )}
@@ -389,6 +431,86 @@ function Dashboard() {
             ))}
           </Grid>
         )}
+
+        {/* Snippet View Dialog */}
+        <Dialog
+          open={viewOpen}
+          onClose={handleCloseView}
+          maxWidth="md"
+          fullWidth
+          keepMounted={false}
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h6" component="div" sx={{ fontWeight: 700 }}>
+                  {viewSnippet?.title}
+                </Typography>
+                {viewSnippet?.description && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                    {viewSnippet.description}
+                  </Typography>
+                )}
+              </Box>
+              <IconButton size="small" onClick={handleCloseView} sx={{ mt: 0.25, flexShrink: 0 }}>
+                <CloseIcon />
+              </IconButton>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+              <Chip
+                label={viewSnippet?.language}
+                size="small"
+                sx={{ backgroundColor: '#FFB300', color: '#1a1a1a', fontWeight: 600 }}
+              />
+              {viewSnippet?.tags?.map((tag, i) => (
+                <Chip
+                  key={i}
+                  label={tag}
+                  size="small"
+                  sx={{ backgroundColor: 'rgba(255,179,0,0.12)', color: '#FFB300', border: '1px solid rgba(255,179,0,0.35)' }}
+                />
+              ))}
+            </Box>
+            <CodeBlock code={viewSnippet?.code || ''} language={viewSnippet?.language} maxHeight={480} />
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'space-between', px: 2, py: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <Tooltip title="Previous snippet">
+                <span>
+                  <IconButton size="small" onClick={handlePrevSnippet} disabled={viewIndex === 0}>
+                    <NavigateBeforeIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 48, textAlign: 'center' }}>
+                {viewIndex + 1} / {viewList.length}
+              </Typography>
+              <Tooltip title="Next snippet">
+                <span>
+                  <IconButton size="small" onClick={handleNextSnippet} disabled={viewIndex === viewList.length - 1}>
+                    <NavigateNextIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Button
+                startIcon={<ContentCopyIcon />}
+                size="small"
+                onClick={handleCopyCode}
+                variant="outlined"
+                color={copied ? 'success' : 'primary'}
+              >
+                {copied ? 'Copied!' : 'Copy Code'}
+              </Button>
+              <Button onClick={handleCloseView} variant="contained">
+                Close
+              </Button>
+            </Box>
+          </DialogActions>
+        </Dialog>
 
         {/* Add/Edit Dialog */}
         <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>

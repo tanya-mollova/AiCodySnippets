@@ -28,7 +28,7 @@ function FiltersBar({ values, onChange, onApply, onReset, rightActions }) {
         sx={{ minWidth: 220 }}
       />
       <FormControl size="small" sx={{ minWidth: 160 }}>
-        <InputLabel id="language-label">Programming Language</InputLabel>
+        <InputLabel id="language-label">Language</InputLabel>
         <Select
           labelId="language-label"
           name="language"
