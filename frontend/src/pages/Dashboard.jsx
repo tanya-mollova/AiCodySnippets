@@ -288,10 +288,13 @@ function Dashboard() {
         ) : (
           <Grid container spacing={3}>
             {myItems.map((snippet, index) => (
-              <Grid item xs={12} md={6} lg={4} key={snippet._id}>
+              <Grid key={snippet._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }} sx={{ display: 'flex' }}>
                 <Card
                   sx={{
                     cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
                     transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
                   }}
@@ -386,10 +389,13 @@ function Dashboard() {
         ) : (
           <Grid container spacing={3}>
             {publicItems.map((snippet, index) => (
-              <Grid item xs={12} md={6} lg={4} key={snippet._id}>
+              <Grid key={snippet._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }} sx={{ display: 'flex' }}>
                 <Card
                   sx={{
                     cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    width: '100%',
                     transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                     '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
                   }}

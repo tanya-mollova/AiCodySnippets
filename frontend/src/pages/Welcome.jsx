@@ -359,8 +359,8 @@ function Welcome() {
           {/* Recent Snippets Section */}
           {!loading && recentSnippets.length > 0 && (
             <Fade in timeout={2000}>
-              <Box sx={{ mt: 12, mb: 4 }}>
-                <Box sx={{ textAlign: 'center', mb: 6 }}>
+              <Box sx={{ mt: 16, mb: 6 }}>
+                <Box sx={{ textAlign: 'center', mb: 8 }}>
                   <Typography 
                     variant="h3" 
                     component="h2" 
@@ -380,7 +380,7 @@ function Welcome() {
                     Explore the latest snippets shared by our community
                   </Typography>
                 </Box>
-                <Grid container spacing={3}>
+                <Grid container spacing={4}>
                   {recentSnippets.map((snippet, index) => (
                     <Grow 
                       key={snippet._id} 
@@ -388,7 +388,7 @@ function Welcome() {
                       timeout={2000 + (index * 150)}
                       style={{ transformOrigin: '0 0 0' }}
                     >
-                      <Grid item xs={12} sm={6} md={4} lg={3} sx={{ display: 'flex' }}>
+                      <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} sx={{ display: 'flex' }}>
                         <Card 
                           onClick={() => handleOpenView(snippet, index)}
                           sx={{

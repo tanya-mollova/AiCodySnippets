@@ -69,6 +69,7 @@ function MySnippets() {
     isPublic: false,
   });
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, snippetId: null, snippetTitle: '' });
 
   useEffect(() => {
     dispatch(fetchMySnippets(myFilters));
@@ -169,10 +170,17 @@ function MySnippets() {
     }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this snippet?')) {
-      dispatch(deleteSnippet(id)).then(() => dispatch(fetchMySnippets(myFilters)));
-    }
+  const handleDelete = (id, title) => {
+    setDeleteConfirm({ open: true, snippetId: id, snippetTitle: title });
+  };
+
+  const handleConfirmDelete = () => {
+    dispatch(deleteSnippet(deleteConfirm.snippetId)).then(() => dispatch(fetchMySnippets(myFilters)));
+    setDeleteConfirm({ open: false, snippetId: null, snippetTitle: '' });
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ open: false, snippetId: null, snippetTitle: '' });
   };
 
   const handleToggleVisibility = (snippet) => {
@@ -183,10 +191,10 @@ function MySnippets() {
   return (
     <>
       <Navbar />
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+      <Container maxWidth="xl" sx={{ mt: 6, mb: 8, px: { xs: 2, sm: 3, md: 4 } }}>
 
         {/* Header */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 5 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             My Snippets
           </Typography>
@@ -206,7 +214,7 @@ function MySnippets() {
         />
 
         {/* Snippet Grid */}
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 5 }}>
           {loadingMy ? (
             <Typography>Loading your snippets...</Typography>
           ) : myItems.length === 0 ? (
@@ -216,9 +224,9 @@ function MySnippets() {
               </Typography>
             </Box>
           ) : (
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               {myItems.map((snippet, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={snippet._id} sx={{ display: 'flex' }}>
+                <Grid key={snippet._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }} sx={{ display: 'flex' }}>
                   <Card
                     sx={{
                       cursor: 'pointer',
@@ -283,7 +291,7 @@ function MySnippets() {
                       <Tooltip title="Delete">
                         <IconButton
                           size="small"
-                          onClick={(e) => { e.stopPropagation(); handleDelete(snippet._id); }}
+                          onClick={(e) => { e.stopPropagation(); handleDelete(snippet._id, snippet.title); }}
                           sx={{ '&:hover': { color: 'error.main' } }}
                         >
                           <DeleteIcon />
@@ -296,6 +304,46 @@ function MySnippets() {
             </Grid>
           )}
         </Box>
+
+        {/* Delete Confirm Dialog */}
+        <Dialog
+          open={deleteConfirm.open}
+          onClose={handleCancelDelete}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
+        >
+          <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box
+              sx={{
+                width: 40, height: 40, borderRadius: '50%',
+                backgroundColor: 'error.light',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <DeleteIcon sx={{ color: 'error.main', fontSize: 20 }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>Delete Snippet</Typography>
+          </DialogTitle>
+          <DialogContent sx={{ pb: 1 }}>
+            <Typography variant="body1" color="text.secondary">
+              Are you sure you want to delete{' '}
+              <Typography component="span" fontWeight={700} color="text.primary">
+                &ldquo;{deleteConfirm.snippetTitle}&rdquo;
+              </Typography>
+              ? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2.5, pt: 1.5, gap: 1 }}>
+            <Button onClick={handleCancelDelete} variant="outlined" fullWidth>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmDelete} variant="contained" color="error" fullWidth>
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Snippet View Dialog */}
         <Dialog open={viewOpen} onClose={handleCloseView} maxWidth="md" fullWidth keepMounted={false}>

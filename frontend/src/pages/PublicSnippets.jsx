@@ -85,10 +85,10 @@ function PublicSnippets() {
   return (
     <>
       <Navbar />
-      <Container maxWidth="xl" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+      <Container maxWidth="xl" sx={{ mt: 6, mb: 8, px: { xs: 2, sm: 3, md: 4 } }}>
 
         {/* Header */}
-        <Box sx={{ mb: 3 }}>
+        <Box sx={{ mb: 5 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
             Explore Snippets
           </Typography>
@@ -108,7 +108,7 @@ function PublicSnippets() {
         />
 
         {/* Snippet Grid */}
-        <Box sx={{ mt: 3 }}>
+        <Box sx={{ mt: 5 }}>
           {loadingPublic ? (
             <Typography>Loading public snippets...</Typography>
           ) : publicItems.length === 0 ? (
@@ -118,9 +118,9 @@ function PublicSnippets() {
               </Typography>
             </Box>
           ) : (
-            <Grid container spacing={3}>
+            <Grid container spacing={4}>
               {publicItems.map((snippet, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={snippet._id} sx={{ display: 'flex' }}>
+                <Grid key={snippet._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }} sx={{ display: 'flex' }}>
                   <Card
                     sx={{
                       cursor: 'pointer',
