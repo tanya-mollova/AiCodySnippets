@@ -8,9 +8,16 @@
     "client": "cd frontend && npm run dev",
     "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
-  "keywords": ["code-snippets", "mern", "react", "express", "mongodb"],
+  "keywords": [
+    "code-snippets",
+    "mern",
+    "react",
+    "express",
+    "mongodb"
+  ],
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "concurrently": "^9.1.2"
   }
 }
