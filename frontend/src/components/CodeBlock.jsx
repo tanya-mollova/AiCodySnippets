@@ -69,8 +69,27 @@ function CodeBlock({ code, language, maxHeight = 200, overflow = 'auto' }) {
       </div>
 
       {/* Code body */}
-      <div style={{ overflow, maxHeight, backgroundColor: '#1d1f21' }}>
-        <pre className={cls} style={{ margin: 0, background: 'transparent', borderRadius: 0, fontSize: '0.8rem', lineHeight: 1.6 }}>
+      <div style={{ 
+        overflowY: overflow === 'hidden' ? 'hidden' : 'auto', 
+        overflowX: 'hidden', 
+        maxHeight, 
+        backgroundColor: '#1d1f21',
+        scrollbarWidth: 'none',
+        msOverflowStyle: 'none',
+      }}>
+        <pre
+          className={cls}
+          style={{
+            margin: 0,
+            background: 'transparent',
+            borderRadius: 0,
+            fontSize: '0.8rem',
+            lineHeight: 1.6,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+          }}
+        >
           <code className={cls} dangerouslySetInnerHTML={{ __html: highlighted }} />
         </pre>
       </div>

@@ -395,6 +395,7 @@ function Welcome() {
                             display: 'flex',
                             flexDirection: 'column',
                             width: '100%',
+                            minWidth: 0,
                             cursor: 'pointer',
                             background: 'linear-gradient(135deg, rgba(42, 42, 42, 0.8) 0%, rgba(33, 33, 33, 0.9) 100%)',
                             backdropFilter: 'blur(10px)',
@@ -423,7 +424,7 @@ function Welcome() {
                             },
                           }}
                         >
-                          <CardContent sx={{ flex: 1 }}>
+                          <CardContent sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                             <Typography 
                               variant="h6" 
                               component="div" 

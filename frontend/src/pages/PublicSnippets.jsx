@@ -127,12 +127,14 @@ function PublicSnippets() {
                       display: 'flex',
                       flexDirection: 'column',
                       width: '100%',
+                      minWidth: 0,
+                      overflow: 'hidden',
                       transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                       '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 },
                     }}
                     onClick={() => handleOpenView(snippet, publicItems, index)}
                   >
-                    <CardContent sx={{ flex: 1 }}>
+                    <CardContent sx={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                       <Chip
                         label={snippet.language}
                         size="small"
